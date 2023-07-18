@@ -2,17 +2,13 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-cg6*%6d51ef8f#4!r3*$vmxm4)abgjw8mo!4y-q*uq1!4$-89$'
+SECRET_KEY = os.getenv('SECRET_KEY', 'project_secret_key')
 
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', 't', '1')
 
-ALLOWED_HOSTS = ['51.250.23.184', '127.0.0.1', 'localhost', 'kittygram-pv.servebeer.com']
+ALLOWED_HOSTS = [i.strip() for i in os.getenv('ALLOWED_HOSTS', '127.0.0.1, localhost').split(',')]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
