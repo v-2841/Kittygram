@@ -1,51 +1,128 @@
-### Как запустить проект:
+# Kittygram - блог для размещение фотографий кошариков.
 
-Клонировать репозиторий и перейти в него в командной строке:
+### Описание проекта: 
+Используя приложение можно сохранять информацию о домашних питомцах, загружать фотографии. Приложение имеет вэб-интерфейс и API.
 
-```
-git clone https://github.com/yandex-praktikum/kittygram_backend.git
-```
+### Установка проекта: 
 
-```
-cd kittygram_backend
-```
+ - Клонироуйте репозиторий:
 
-Cоздать и активировать виртуальное окружение:
-
-```
-python3 -m venv env
-```
-
-* Если у вас Linux/macOS
-
+    ```bash
+    git clone git@github.com:v-2841/kittygram_final.git
     ```
-    source env/bin/activate
+    ```bash
+    cd kittygram
+    ```
+ - Создайте файл .env и заполните его своими данными:
+
+    ```bash
+   # Секреты DB
+    POSTGRES_USER=[имя_пользователя_базы]
+    POSTGRES_PASSWORD=[пароль_к_базе]
+    POSTGRES_DB= [имя_базы_данных]
+    DB_PORT=[порт_соединения_к_базе]
+    DB_HOST=[db]
+
+   # Секреты джанги
+   SECRET_KEY='SECRET_KEY'
+   DEBUG=False
+   ALLOWED_HOSTS='ваш домен'
+    ``` 
+
+### Создание Docker-образов
+
+1.  Замените username на ваш логин на DockerHub:
+
+    ```bash
+    cd frontend
+    docker build -t username/kittygram_frontend .
+    cd ../backend
+    docker build -t username/kittygram_backend .
+    cd ../nginx
+    docker build -t username/kittygram_gateway . 
     ```
 
-* Если у вас windows
+2. Загрузите образы на DockerHub:
 
+    ```bash
+    docker push username/kittygram_frontend
+    docker push username/kittygram_backend
+    docker push username/kittygram_gateway
     ```
-    source env/scripts/activate
+
+### Деплой на удалённый сервере
+
+1. Подключитесь к удаленному серверу
+
+    ```bash
+    ssh -i путь_до_файла_с_SSH_ключом/название_файла_с_SSH_ключом имя_пользователя@ip_адрес_сервера 
     ```
 
-```
-python3 -m pip install --upgrade pip
-```
+2. Создайте на сервере директорию kittygram через терминал
 
-Установить зависимости из файла requirements.txt:
+    ```bash
+    mkdir kittygram
+    ```
 
-```
-pip install -r requirements.txt
-```
+3. Установка docker compose на сервер:
 
-Выполнить миграции:
+    ```bash
+    sudo apt update
+    sudo apt install curl
+    curl -fSL https://get.docker.com -o get-docker.sh
+    sudo sh ./get-docker.sh
+    sudo apt-get install docker-compose-plugin
+    ```
 
-```
-python3 manage.py migrate
-```
+4. В директорию kittygram/ скопируйте файлы docker-compose.production.yml и .env:
 
-Запустить проект:
+    ```bash
+    scp -i path_to_SSH/SSH_name docker-compose.production.yml username@server_ip:/home/username/kittygram/docker-compose.production.yml
+    ```
 
-```
-python3 manage.py runserver
-```
+5. Запустите docker compose в режиме демона:
+
+    ```bash
+    sudo docker compose -f docker-compose.production.yml up -d
+    ```
+
+6. Выполните миграции, соберите статику бэкенда и скопируйте их в /backend_static/static/:
+
+    ```bash
+    sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+    sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+    sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+    ```
+
+7. На сервере в редакторе nano откройте конфиг Nginx:
+
+    ```bash
+    sudo nano /etc/nginx/sites-enabled/default
+   
+    ```
+
+8. Добавте настройки location в секции server:
+
+    ```bash
+    location / {
+        proxy_set_header Host $http_host;
+        proxy_pass http://127.0.0.1:9000;
+    }
+    ```
+
+9. Проверьте работоспособность конфигураций и перезапустите Nginx:
+
+    ```bash
+    sudo nginx -t
+    sudo service nginx reload
+    ```
+
+### Технологии и необходимые ниструменты:
+- Docker
+- Postgres
+- Python 3.x
+- Node.js 9.x.x
+- Nginx
+- Gunicorn
+- Django (backend)
+- React (frontend)
