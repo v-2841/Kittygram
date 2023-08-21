@@ -117,7 +117,7 @@
     sudo service nginx reload
     ```
 
-### Технологии и необходимые ниструменты:
+### Стек технологий:
 - Docker
 - Postgres
 - Python 3.x
